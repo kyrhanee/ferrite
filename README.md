@@ -1,13 +1,6 @@
 # Ferrite
 
-```
- ______ ______ _____  _____ _____ _______ ______
-|  ____|  ____|  __ \|  __ \_   _|__   __|  ____|
-| |__  | |__  | |__) | |__) || |    | |  | |__
-|  __| |  __| |  _  /|  _  / | |    | |  |  __|
-| |    | |____| | \ \| | \ \_| |_   | |  | |____
-|_|    |______|_|  \_\_|  \_\_____|  |_|  |______|
-```
+<img src="banner.svg" alt="Ferrite" width="720">
 
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT%20%7C%20Apache--2.0-blue)
