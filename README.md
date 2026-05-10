@@ -20,7 +20,6 @@ A modern Windows `.exe` packer. Smaller files, encrypted payload, drop-in replac
 
 - 📦 **Stronger compression than UPX** — up to **60%+** on real binaries
 - 🔒 **Encrypted payload** — every packed file gets a fresh ChaCha20 key
-- ↩️ **Lossless `unpack`** — restores the original file byte-for-byte
 - 🧩 **Three integration modes** — CLI, native shared library (DLL), self-hosted REST API
 - 🪶 **Tiny footprint** — minimal runtime overhead
 - ✅ **No external dependencies** — single executable
@@ -69,14 +68,6 @@ $ ferrite pack myapp.exe
   [+] packed successfully
 ```
 
-### `unpack` — restore the original
-
-```
-ferrite unpack <packed.exe> [-o output.exe]
-```
-
-Restores the original file byte-for-byte.
-
 ### `info` — inspect a file
 
 ```
@@ -115,9 +106,9 @@ Real-world benchmarks (Zstd, level 22):
 
 | Source | Size | Packed | Reduction |
 | --- | --- | --- | --- |
-| `ferrite.exe` (Rust) | 2.23 MiB | 899 KiB | **60.62%** |
+| `ferrite.exe` | 1.63 MiB | 675 KiB | **59.59%** |
+| `ferrite-api.exe` | 3.36 MiB | 1.37 MiB | **59.13%** |
 | `cmd.exe` | 283 KiB | 171 KiB | **39.58%** |
-| `notepad.exe` | 196 KiB | 134 KiB | **31.89%** |
 
 ## 📚 Native library (DLL)
 
@@ -140,9 +131,9 @@ int32_t ferrite_last_error(char* buf, size_t buf_len);
 
 Returns `0` on success, negative on error.
 
-## 🌐 REST API (VPS)
+## 🌐 REST API
 
-For remote packing — run `ferrite-api.exe` on your server:
+For remote/automated packing — run `ferrite-api.exe`:
 
 ```
 ferrite-api.exe --host 0.0.0.0 --port 7474
@@ -159,7 +150,7 @@ Endpoints:
 ```
 curl -F file=@app.exe -F 'options={"level":22}' \
      -o app.packed.exe \
-     https://your-server:7474/v1/pack
+     http://localhost:7474/v1/pack
 ```
 
 Supports optional `Authorization: Bearer <TOKEN>` (set via `FERRITE_TOKEN` env).
