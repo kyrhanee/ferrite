@@ -11,19 +11,23 @@
 
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT%20%7C%20Apache--2.0-blue)
-![Platform](https://img.shields.io/badge/platform-Windows%20x64-lightgrey)
+![Platform](https://img.shields.io/badge/platform-Windows%20x86%20%2F%20x64-lightgrey)
 ![Compression](https://img.shields.io/badge/compression-up%20to%2073%25-red)
 
-A modern Windows `.exe` packer. Compresses executables, encrypts the payload, ships as a single binary.
+A modern Windows `.exe` packer. Compresses executables, polymorphises the payload with ChaCha20, ships as a single binary.
 
 ## ⚙️ Features
 
-- 📦 **Strong compression** — up to **73%** size reduction
-- 🔒 **Encrypted payload** — every packed file gets a fresh ChaCha20 key
+- 📦 **Strong compression** — up to **73%** size reduction (Zstd 22 + BCJ x86 filter)
+- 🎲 **Polymorphic payload** — every packed file gets a fresh ChaCha20 key, so two
+  identical inputs produce byte-different outputs (defeats static signatures)
+- 🛡️ **Tamper-evident** — SHA-256 of the payload is verified by the stub at every launch
+- 🖥️ **Both x86 (32-bit) and x64 (64-bit)** — packer auto-detects architecture and
+  embeds the right unpacker stub
 - ⚡ **Three speed presets** — from instant to maximum
 - 🧩 **Three integration modes** — CLI, native shared library (DLL), self-hosted REST API
-- 🪶 **42 KiB runtime** — Rust `no_std` stub
-- ✅ **Zero dependencies** — single executable
+- 🪶 **~50 KiB runtime** — Rust `no_std` stub, only depends on `kernel32.dll` + `bcrypt.dll`
+- ✅ **Zero external dependencies** — single executable
 
 ## 📥 Download
 
@@ -123,8 +127,13 @@ Returns `0` on success, negative on error.
 For remote / automated packing — run `ferrite-api.exe`:
 
 ```
-ferrite-api.exe --host 0.0.0.0 --port 7474
+ferrite-api.exe                                # listens on 127.0.0.1:7474 (loopback)
+ferrite-api.exe --host 0.0.0.0 --token SECRET  # exposed; token mandatory
 ```
+
+By default the server binds to `127.0.0.1` (loopback only). Binding to a
+non-loopback address requires `--token` / `FERRITE_TOKEN`, otherwise startup
+is refused.
 
 Endpoints:
 
@@ -140,13 +149,20 @@ curl -F file=@app.exe -F 'options={"level":22}' \
      http://localhost:7474/v1/pack
 ```
 
-Optional `Authorization: Bearer <TOKEN>` (set via `FERRITE_TOKEN` env).
+When a token is set, send it in the request:
+
+```
+curl -H "Authorization: Bearer SECRET" -F file=@app.exe \
+     -o app.packed.exe \
+     http://your-host:7474/v1/pack
+```
 
 ## 🖥️ Compatibility
 
-- ✅ Windows 10 / 11 (x64)
+- ✅ Windows 10 / 11 (x64 and x86)
 - ✅ Windows Server 2019 / 2022
-- ⏳ x86 (32-bit) — planned
+- ✅ x86 (32-bit) inputs — packed with a 32-bit stub
+- ✅ x64 (64-bit) inputs — packed with a 64-bit stub
 - ⏳ ARM64 — planned
 
 ## 📜 License
