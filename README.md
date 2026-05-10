@@ -12,17 +12,18 @@
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT%20%7C%20Apache--2.0-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-lightgrey)
-![Compression](https://img.shields.io/badge/compression-up%20to%2060%25-red)
+![Compression](https://img.shields.io/badge/compression-up%20to%2073%25-red)
 
-A modern Windows `.exe` packer. Smaller files, encrypted payload, drop-in replacement for UPX.
+A modern Windows `.exe` packer. Compresses executables, encrypts the payload, ships as a single binary.
 
 ## ⚙️ Features
 
-- 📦 **Stronger compression than UPX** — up to **60%+** on real binaries
+- 📦 **Strong compression** — up to **73%** size reduction
 - 🔒 **Encrypted payload** — every packed file gets a fresh ChaCha20 key
+- ⚡ **Three speed presets** — from instant to maximum
 - 🧩 **Three integration modes** — CLI, native shared library (DLL), self-hosted REST API
-- 🪶 **Tiny footprint** — minimal runtime overhead
-- ✅ **No external dependencies** — single executable
+- 🪶 **42 KiB runtime** — Rust `no_std` stub
+- ✅ **Zero dependencies** — single executable
 
 ## 📥 Download
 
@@ -39,76 +40,62 @@ Prebuilt binaries: **[Releases](../../releases/latest)**
 ## 🚀 Quick start
 
 ```
-ferrite pack myapp.exe -o myapp.packed.exe
+ferrite app.exe
 ```
 
-That's it. Run `myapp.packed.exe` like the original — it works the same way, just smaller.
+Packs `app.exe` into `app.packed.exe`. Run it like the original — it works the same, only smaller.
 
-## 🖥️ Commands
-
-### `pack` — compress an executable
+## 🖥️ Usage
 
 ```
-ferrite pack <input.exe> [-o output.exe] [-l level]
+ferrite [OPTIONS] FILE
 ```
 
-Example output:
+| Flag | Description |
+| --- | --- |
+| `-o, --output PATH` | Output file (default: `FILE.packed.exe`) |
+| `-l, --level LEVEL` | `fast` \| `max` \| `ultra` (default: `ultra`) |
+| `-i, --info` | Show file info / metadata |
+| `-t, --test` | Exit `0` if FILE is packed, `1` otherwise |
+| `-V, --version` | Print build info |
+| `-h, --help` | Show help |
+
+### Examples
 
 ```
-$ ferrite pack myapp.exe
+ferrite app.exe                    # pack into app.packed.exe (ultra)
+ferrite app.exe -l fast            # fast pack — seconds
+ferrite app.exe -l max             # balanced
+ferrite app.exe -o tiny.exe        # custom output name
+ferrite -i app.packed.exe          # show metadata
+ferrite -t app.packed.exe          # check if packed (exit 0/1)
+```
 
-  [*] input    : myapp.exe
-  [*] output   : myapp.packed.exe
+### Example output
+
+```
+$ ferrite node.exe
+
+  [*] input    : node.exe
+  [*] output   : node.packed.exe
   [*] algorithm: zstd (level 22)
 
-  [+] 2.23 MiB -> 899.50 KiB
-  [+] saved 1.35 MiB (60.62%)
-  [*] elapsed  : 892 ms
+  [+] 87.45 MiB -> 23.59 MiB
+  [+] saved 63.85 MiB (73.02%)
+  [*] elapsed  : 41255 ms
 
   [+] packed successfully
 ```
 
-### `info` — inspect a file
-
-```
-ferrite info <file.exe>
-```
-
-Shows machine, subsystem, base address, sections, and packed metadata if it is a Ferrite container.
-
-### `test` — check whether a file is packed
-
-```
-ferrite test <file.exe>
-```
-
-Exit code `0` if the file is packed by Ferrite, `1` otherwise. Useful in scripts.
-
-### `version` — print build info
-
-```
-ferrite version
-```
-
-## 🎚️ Options
-
-| Flag | Default | Description |
-| --- | --- | --- |
-| `-o, --output <path>` | `<input>.packed.exe` | Output path |
-| `-l, --level <level>` | `ultra` | Compression level: `fast`, `normal`, `max`, `ultra` |
-| `--no-encrypt` | off | Disable payload encryption |
-| `--keep-debug` | off | Keep the debug data directory |
-| `--keep-certificates` | off | Keep the Authenticode certificate |
-
 ## 📊 Compression results
 
-Real-world benchmarks (Zstd, level 22):
+Real-world benchmark on a 87.45 MiB x64 binary:
 
-| Source | Size | Packed | Reduction |
+| Level | Size | Reduction | Time |
 | --- | --- | --- | --- |
-| `ferrite.exe` | 1.63 MiB | 675 KiB | **59.59%** |
-| `ferrite-api.exe` | 3.36 MiB | 1.37 MiB | **59.13%** |
-| `cmd.exe` | 283 KiB | 171 KiB | **39.58%** |
+| `fast` | 34.13 MiB | 60.97% | 1.1 s |
+| `max` | 27.10 MiB | 69.01% | 2.7 s |
+| `ultra` | **23.59 MiB** | **73.02%** | 41 s |
 
 ## 📚 Native library (DLL)
 
@@ -133,7 +120,7 @@ Returns `0` on success, negative on error.
 
 ## 🌐 REST API
 
-For remote/automated packing — run `ferrite-api.exe`:
+For remote / automated packing — run `ferrite-api.exe`:
 
 ```
 ferrite-api.exe --host 0.0.0.0 --port 7474
@@ -153,17 +140,14 @@ curl -F file=@app.exe -F 'options={"level":22}' \
      http://localhost:7474/v1/pack
 ```
 
-Supports optional `Authorization: Bearer <TOKEN>` (set via `FERRITE_TOKEN` env).
+Optional `Authorization: Bearer <TOKEN>` (set via `FERRITE_TOKEN` env).
 
 ## 🖥️ Compatibility
 
-- ✅ **Windows 10 x64**
-- ✅ **Windows 11 x64**
-- ✅ **Windows Server 2019 / 2022**
+- ✅ Windows 10 / 11 (x64)
+- ✅ Windows Server 2019 / 2022
 - ⏳ x86 (32-bit) — planned
 - ⏳ ARM64 — planned
-
-> **Note:** system executables that depend on `%SYSTEMROOT%` (`notepad.exe`, `cmd.exe`, etc.) require their resource files to be co-located. They behave the same way without packing — this is a Windows limitation, not a Ferrite limitation. Pack your own applications instead.
 
 ## 📜 License
 
